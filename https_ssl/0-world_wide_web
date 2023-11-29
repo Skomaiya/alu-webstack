@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Function to display information about a subdomain
+
+display_info() {
+    local subdomain=$1
+    local domain=$2
+    local record_type=$(dig $subdomain.$domain +short -t A | awk '{print $1}')
+    local destination=$(dig $subdomain.$domain +short)
+
+    echo "The subdomain $subdomain is a $record_type record and points to $destination"
+}
+
+# Check if the correct number of arguments is provided
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 domain [subdomain]"
+    exit 1
+fi
+
+# Assign domain and subdomain variables
+domain=$1
+subdomain=$2
+
+# Configure subdomains
+echo "Configuring subdomains..."
+
+# Remove default subdomains if they exist
+sudo sed -i '/www/d' /etc/nginx/sites-available/default
+sudo sed -i '/lb-01/d' /etc/nginx/sites-available/default
+sudo sed -i '/web-01/d' /etc/nginx/sites-available/default
+sudo sed -i '/web-02/d' /etc/nginx/sites-available/default
+
+# Add subdomains to Nginx configuration
+echo -e "server {\n    server_name www.$domain;\n    location / {\n        return 301 http://lb-01.$domain;\n    }\n}" | sudo tee -a /etc/nginx/sites-available/default
+echo -e "server {\n    server_name lb-01.$domain;\n    location / {\n        proxy_pass http://54.210.47.110;\n    }\n}" | sudo tee -a /etc/nginx/sites-available/default
+echo -e "server {\n    server_name web-01.$domain;\n    location / {\n        proxy_pass http://34.198.248.145;\n    }\n}" | sudo tee -a /etc/nginx/sites-available/default
+echo -e "server {\n    server_name web-02.$domain;\n    location / {\n        proxy_pass http://54.89.38.100;\n    }\n}" | sudo tee -a /etc/nginx/sites-available/default
+
+# Reload Nginx to apply changes
+sudo service nginx reload
+
+# Display information about subdomains
+echo "Displaying information about subdomains..."
+if [ -z "$subdomain" ]; then
+    display_info www $domain
+    display_info lb-01 $domain
+    display_info web-01 $domain
+    display_info web-02 $domain
+else
+    display_info $subdomain $domain
+fi
