@@ -1,18 +1,38 @@
 #!/usr/bin/env bash
-#Configure your domain zone so that the subdomain www and display information about subdomains
+# Function to display information about a subdomain
 
-if [ "$#" = 1 ]
-then
-    subdomains=("www" "lb-01" "web-01" "web-02")
-    for sub_domain in "${subdomains[@]}"
-    do
-	record_type=$(dig $sub_domain.$1 | grep -A1 'ANSWER SECTION' | tail -1 | awk '{print $4}')
-        destination_ip=$(dig $sub_domain.$1 | grep -A1 'ANSWER SECTION' | tail -1 | awk '{print $5}')
-	echo "The subdomain $sub_domain is a $record_type record and points to $destination_ip"
-    done
-elif [ "$#" = 2 ]
-then
-    record_type=$(dig $2.$1 | grep -A1 'ANSWER SECTION' | tail -1 | awk '{print $4}')
-    destination_ip=$(dig $2.$1 | grep -A1 'ANSWER SECTION' | tail -1 | awk '{print $5}')
-    echo "The subdomain $2 is a $record_type record and points to $destination_ip"
+display_info() {
+    local subdomain=$1
+    local domain=$2
+    local record_type=$(dig $sub_domain.$1 | grep -A1 'ANSWER SECTION' | tail -1 | awk '{print $4}')
+    local destination=$(dig $subdomain.$domain +short)
+
+    echo "The subdomain $subdomain is a $record_type record and points to $destination"
+}
+
+# Check if the correct number of arguments is provided
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 domain [subdomain]"
+    exit 1
+fi
+
+# Assign domain and subdomain variables
+domain=$1
+subdomain=$2
+
+# Configure subdomains
+# echo "Configuring subdomains..."
+
+# Reload Nginx to apply changes
+sudo service nginx reload
+
+# Display information about subdomains
+# echo "Displaying information about subdomains..."
+if [ -z "$subdomain" ]; then
+    display_info www $domain
+    display_info lb-01 $domain
+    display_info web-01 $domain
+    display_info web-02 $domain
+else
+    display_info $subdomain $domain
 fi
