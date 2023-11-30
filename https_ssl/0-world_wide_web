@@ -21,13 +21,13 @@ domain=$1
 subdomain=$2
 
 # Configure subdomains
-echo "Configuring subdomains..."
+# echo "Configuring subdomains..."
 
 # Reload Nginx to apply changes
 sudo service nginx reload
 
 # Display information about subdomains
-echo "Displaying information about subdomains..."
+# echo "Displaying information about subdomains..."
 if [ -z "$subdomain" ]; then
     display_info www $domain
     display_info lb-01 $domain
@@ -36,3 +36,4 @@ if [ -z "$subdomain" ]; then
 else
     display_info $subdomain $domain
 fi
+
