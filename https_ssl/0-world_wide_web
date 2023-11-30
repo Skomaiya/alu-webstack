@@ -4,7 +4,7 @@
 display_info() {
     local subdomain=$1
     local domain=$2
-    local record_type= "A"
+    local record_type= A
     local destination=$(dig $subdomain.$domain +short)
 
     echo "The subdomain $subdomain is a $record_type record and points to $destination"
